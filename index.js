@@ -1,23 +1,51 @@
-const cardTemplate = function (/* You can pass the data here*/) {
+const cardTemplate = function (country) {
   return `<div class="card">
-              <img id="flag-image" src="ADD THE IMAGE LINK HERE" alt="flag" />
-              <h1 class="center">ADD COUNTRY NAME HERE</h1>
+               <img id="flag-image" src="${country.flags.svg}" alt="flag of ${country.name.common}" />
+              <h1 class="center">${country.name.common}</h1>
             </div>`;
 };
 
 const countriesNode = document.getElementById("countries");
 
-fetch(/* Need the provide API URL to get all countries */)
+const filterSelect = document.createElement("select");
+filterSelect.innerHTML = `<option value="all">🌍 Todos los continentes</option>`;
+document.body.insertBefore(filterSelect, countriesNode);
+
+let allCountries = [];
+
+fetch("https://restcountries.com/v3.1/all")
   .then(function (response) {
-    // fetch() returns a promise containing the response (a Response object).
-    // This is just an HTTP response, not the actual JSON. 
-    // To extract the JSON body content from the response, 
-    // we use the json() method and pass it into the next .then()
+    return response.json();
   })
   .then(function (countries) {
-    // Here is where you'll need to add into the DOM all the countries received from API 
+    allCountries = countries
+      .sort((a, b) => a.name.common.localeCompare(b.name.common))
+      .slice(0, 150);
+    countries;
 
-    // 1 - We will need to iterate the countries variable with a loop
-    // 2 - You can use the cardTemplate() function to create a div with a class card already styled
-    // 💡 you can use countriesNode variable to add elements
+    const continents = [...new Set(allCountries.map((c) => c.continents[0]))];
+    continents.forEach((continent) => {
+      const option = document.createElement("option");
+      option.value = continent;
+      option.textContent = continent;
+      filterSelect.appendChild(option);
+    });
+
+    renderCountries(allCountries);
   });
+
+function renderCountries(countries) {
+  countriesNode.innerHTML = "";
+  countries.forEach(function (country) {
+    countriesNode.innerHTML += cardTemplate(country);
+  });
+}
+filterSelect.addEventListener("change", function () {
+  const selected = this.value;
+  const filteredCountries =
+    selected === "all"
+      ? allCountries
+      : allCountries.filter((c) => c.continents[0] === selected);
+
+  renderCountries(filteredCountries);
+});
