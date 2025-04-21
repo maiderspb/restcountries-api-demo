@@ -49,4 +49,3 @@ filterSelect.addEventListener("change", function () {
 
   renderCountries(filteredCountries);
 });
-go
